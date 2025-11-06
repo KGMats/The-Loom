@@ -1,9 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { useAccount, useDisconnect } from 'wagmi';
+import ProjectStats from './ProjectStats';
+import CreateProject from './CreateProject';
+import ProjectList from './ProjectList';
 
 // Types simples
 interface Project {
@@ -11,6 +14,7 @@ interface Project {
   title: string;
   description: string;
   type: 'IA' | 'GRAFICA';
+  
   price: number;
   wallet_address: string;
   status: 'PENDING' | 'WORKING' | 'COMPLETED';
@@ -79,13 +83,21 @@ export default function TheLoomMVP() {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
 
-  // Queries
+  // Guarda interval IDs para evitar leaks quando navegar fora do componente
+  const intervalsRef = useRef<Record<number, number>>({});
+
+  useEffect(() => {
+    return () => {
+      Object.values(intervalsRef.current).forEach((id) => clearInterval(id));
+      intervalsRef.current = {};
+    };
+  }, []);
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['projects'],
     queryFn: fetchProjects,
   });
 
-  // Mutations
   const createMutation = useMutation({
     mutationFn: createProject,
     onSuccess: () => {
@@ -145,26 +157,31 @@ export default function TheLoomMVP() {
 
   const startProject = (project: Project) => {
     if (project.status === 'PENDING') {
-      // Simular progresso
-      const progressInterval = setInterval(() => {
+      // Evita closure sobre project.progress usando variável local
+      let progress = typeof project.progress === 'number' ? project.progress : 0;
+      const projId = project.id;
+
+      // dispara estado WORKING imediatamente
+      updateMutation.mutate({ id: projId, data: { status: 'WORKING', progress } });
+
+      const intervalId = window.setInterval(() => {
+        progress = Math.min(progress + 10, 100);
+
         updateMutation.mutate({
-          id: project.id,
-          data: { 
-            status: 'WORKING',
-            progress: Math.min(project.progress + 10, 100)
+          id: projId,
+          data: {
+            status: progress >= 100 ? 'COMPLETED' : 'WORKING',
+            progress
           }
         });
-        
-        if (project.progress + 10 >= 100) {
-          clearInterval(progressInterval);
-          setTimeout(() => {
-            updateMutation.mutate({
-              id: project.id,
-              data: { status: 'COMPLETED', progress: 100 }
-            });
-          }, 2000);
+
+        if (progress >= 100) {
+          clearInterval(intervalsRef.current[projId]);
+          delete intervalsRef.current[projId];
         }
-      }, 1000);
+      }, 2000);
+
+      intervalsRef.current[projId] = intervalId as unknown as number;
     }
   };
 
@@ -217,24 +234,7 @@ export default function TheLoomMVP() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-gray-900">Total de Projetos</h3>
-            <p className="text-3xl font-bold text-blue-600">{data?.projects?.length || 0}</p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-gray-900">Projetos Ativos</h3>
-            <p className="text-3xl font-bold text-yellow-600">
-              {data?.projects?.filter(p => p.status === 'WORKING').length || 0}
-            </p>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-semibold text-gray-900">Concluídos</h3>
-            <p className="text-3xl font-bold text-green-600">
-              {data?.projects?.filter(p => p.status === 'COMPLETED').length || 0}
-            </p>
-          </div>
-        </div>
+        <ProjectStats projects={data?.projects || []} />
 
         {/* Actions */}
         <div className="mb-8">
@@ -250,146 +250,30 @@ export default function TheLoomMVP() {
           </button>
         </div>
 
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data?.projects?.map((project) => (
-            <div key={project.id} className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-gray-900">{project.title}</h3>
-                <div className="flex space-x-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getTypeColor(project.type)}`}>
-                    {project.type}
-                  </span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(project.status)}`}>
-                    {project.status}
-                  </span>
-                </div>
-              </div>
-              
-              <p className="text-gray-600 mb-4 line-clamp-2">{project.description}</p>
-              
-              <div className="mb-4">
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Preço</span>
-                  <span className="font-semibold">{project.price} ETH</span>
-                </div>
-                
-                {project.status === 'WORKING' && (
-                  <div className="mb-2">
-                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                      <span>Progresso</span>
-                      <span>{project.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                        style={{ width: `${project.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex space-x-2">
-                {project.status === 'PENDING' && (
-                  <button
-                    onClick={() => startProject(project)}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-semibold text-sm transition-colors"
-                  >
-                    ▶️ Iniciar
-                  </button>
-                )}
-                
-                <button
-                  onClick={() => handleEdit(project)}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded font-semibold text-sm transition-colors"
-                >
-                  ✏️ Editar
-                </button>
-                
-                <button
-                  onClick={() => handleDelete(project.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded font-semibold text-sm transition-colors"
-                >
-                  🗑️ Deletar
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
+        <ProjectList
+          projects={data?.projects || []}
+          onEdit={handleEdit}
+          onStart={startProject}
+          onDelete={handleDelete}
+        />
       </main>
 
-      {/* Modal */}
+      {/* Modal with extracted CreateProject component */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4">
-              {editingProject ? '✏️ Editar Projeto' : '➕ Novo Projeto'}
-            </h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Título</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Descrição</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full border border-gray-300 rounded px-3 py-2 h-20"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo</label>
-                <select
-                  value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value as 'IA' | 'GRAFICA' })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                >
-                  <option value="IA">🤖 IA</option>
-                  <option value="GRAFICA">🎨 Gráfica</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Preço (ETH)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
-                  className="w-full border border-gray-300 rounded px-3 py-2"
-                  required
-                />
-              </div>
-              
-              <div className="flex space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded font-semibold transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-semibold transition-colors"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                >
-                  {editingProject ? 'Atualizar' : 'Criar'}
-                </button>
-              </div>
-            </form>
-          </div>
+          <CreateProject
+            initial={editingProject || undefined}
+            onCancel={() => setIsModalOpen(false)}
+            onSubmit={(payload) => {
+              if (editingProject) {
+                updateMutation.mutate({ id: editingProject.id, data: { ...payload, wallet_address: payload.wallet_address || address || '' } });
+              } else {
+                createMutation.mutate({ ...payload, wallet_address: payload.wallet_address || address || '' });
+              }
+            }}
+            loading={createMutation.isPending || updateMutation.isPending}
+            isEditing={!!editingProject}
+          />
         </div>
       )}
     </div>

@@ -1,197 +1,82 @@
-// Em: app/api/projects/[id]/route.ts
 import { NextResponse } from 'next/server';
-import db from '@/lib/database.js';
+import { getQuery, runQuery } from '../../../../database.js';
 
-// ----------------------------------------------------
-// PUT /api/projects/[id] (ATUALIZAR um projeto)
-// ----------------------------------------------------
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+const isValidWalletAddress = (address: string) => /^0x[a-fA-F0-9]{40}$/.test(address);
+
+// GET /api/projects/:id
+export async function GET(request: Request, context: any) {
   try {
-    const id = params.id;
-    // O frontend pode enviar campos parciais
+    const params = await Promise.resolve(context.params);
+    const id = params?.id;
+    const project = await getQuery('SELECT * FROM projects WHERE id = ?', [id]);
+    if (!project) {
+      return NextResponse.json({ success: false, error: 'Projeto não encontrado' }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, project });
+  } catch (error: any) {
+    console.error('GET /api/projects/[id] error:', error);
+    return NextResponse.json({ success: false, error: 'Erro ao carregar projeto' }, { status: 500 });
+  }
+}
+
+// PUT /api/projects/:id - atualiza parciamente
+export async function PUT(request: Request, context: any) {
+  try {
+    const params = await Promise.resolve(context.params);
+    const id = params?.id;
     const body = await request.json();
 
-    // Busca o projeto atual
-    const project = await new Promise<any>((resolve, reject) => {
-      db.get('SELECT * FROM projects WHERE id = ?', [id], (err, row) => {
-        if (err) reject(err);
-        resolve(row);
-      });
-    });
-    if (!project) {
-      return NextResponse.json({ error: 'Projeto não encontrado' }, { status: 404 });
+    const project = await getQuery('SELECT * FROM projects WHERE id = ?', [id]);
+    if (!project) return NextResponse.json({ success: false, error: 'Projeto não encontrado' }, { status: 404 });
+
+    // Merge dos campos (aceita parciais)
+    const title = body.title !== undefined ? String(body.title).trim() : project.title;
+    const description = body.description !== undefined ? String(body.description) : project.description;
+    const type = body.type !== undefined ? body.type : project.type;
+    const price = body.price !== undefined ? Number(body.price) : project.price;
+    const wallet_address = body.wallet_address !== undefined ? body.wallet_address : project.wallet_address;
+    const status = body.status !== undefined ? body.status : project.status;
+    const progress = body.progress !== undefined ? Number(body.progress) : project.progress;
+
+    if (type && !['IA', 'GRAFICA'].includes(type)) {
+      return NextResponse.json({ success: false, error: 'Tipo inválido' }, { status: 400 });
+    }
+    if (price !== undefined && (isNaN(price) || price <= 0)) {
+      return NextResponse.json({ success: false, error: 'Preço deve ser um número positivo' }, { status: 400 });
+    }
+    if (wallet_address && !isValidWalletAddress(wallet_address)) {
+      return NextResponse.json({ success: false, error: 'Endereço de carteira inválido' }, { status: 400 });
     }
 
-    // Mapeia e mescla os campos (Frontend -> Banco)
-    const updatedData = {
-      name: body.title !== undefined ? body.title : project.name,
-      description: body.description !== undefined ? body.description : project.description,
-      valor: body.price !== undefined ? body.price : project.valor,
-      type: body.type !== undefined ? body.type : project.type,
-      status: body.status !== undefined ? body.status : project.status,
-      progress: body.progress !== undefined ? body.progress : project.progress,
-    };
+    const result: any = await runQuery(
+      `UPDATE projects SET title = ?, description = ?, type = ?, price = ?, wallet_address = ?, status = ?, progress = ? WHERE id = ?`,
+      [title, description, type, price, wallet_address, status, progress, id]
+    );
 
-    await new Promise<void>((resolve, reject) => {
-      db.run(
-        'UPDATE projects SET name = ?, description = ?, valor = ?, type = ?, status = ?, progress = ? WHERE id = ?',
-        [
-          updatedData.name,
-          updatedData.description,
-          updatedData.valor,
-          updatedData.type,
-          updatedData.status,
-          updatedData.progress,
-          id
-        ],
-        function (err) {
-          if (err) reject(err);
-          resolve();
-        }
-      );
-    });
-    
-    return NextResponse.json({ id, ...updatedData });
+    if (result.changes === 0) {
+      return NextResponse.json({ success: false, error: 'Projeto não encontrado' }, { status: 404 });
+    }
+
+    const updated = await getQuery('SELECT * FROM projects WHERE id = ?', [id]);
+    return NextResponse.json({ success: true, project: updated });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('PUT /api/projects/[id] error:', error);
+    return NextResponse.json({ success: false, error: 'Erro ao atualizar projeto' }, { status: 500 });
   }
 }
 
-// ----------------------------------------------------
-// DELETE /api/projects/[id] (DELETAR um projeto)
-// ----------------------------------------------------
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+// DELETE /api/projects/:id
+export async function DELETE(request: Request, context: any) {
   try {
-    const id = params.id;
-
-    const result = await new Promise<{ changes: number }>((resolve, reject) => {
-      db.run('DELETE FROM projects WHERE id = ?', [id], function (err) {
-        if (err) reject(err);
-        resolve({ changes: this.changes });
-      });
-    });
-
+    const params = await Promise.resolve(context.params);
+    const id = params?.id;
+    const result: any = await runQuery('DELETE FROM projects WHERE id = ?', [id]);
     if (result.changes === 0) {
-      return NextResponse.json({ error: 'Projeto não encontrado' }, { status: 404 });
+      return NextResponse.json({ success: false, error: 'Projeto não encontrado' }, { status: 404 });
     }
-
-    return NextResponse.json({ message: 'Projeto deletado' });
+    return NextResponse.json({ success: true, message: 'Projeto deletado' });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}// Em: app/api/projects/[id]/route.js
-
-import { NextResponse } from 'next/server';
-import db from '@/database.js'; // ou '../../database.js'
-
-// ------------------------------------------------------------------
-// R - READ (Ler UM projeto específico)
-// ------------------------------------------------------------------
-export async function GET(request, { params }) {
-  try {
-    const id = params.id; // Pega o 'id' da URL (ex: /api/projects/123)
-
-    const project = await new Promise((resolve, reject) => {
-      db.get('SELECT * FROM projects WHERE id = ?', [id], (err, row) => {
-        if (err) reject(err);
-        resolve(row);
-      });
-    });
-
-    if (!project) {
-      return NextResponse.json(
-        { error: 'Projeto não encontrado' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(project);
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-// ------------------------------------------------------------------
-// U - UPDATE (Atualizar UM projeto)
-// ------------------------------------------------------------------
-export async function PUT(request, { params }) {
-  try {
-    const id = params.id;
-    const { name, valor, type } = await request.json();
-
-    // Validações (iguais às do POST)
-    if (!name || !valor || !type) {
-      return NextResponse.json(
-        { error: 'Campos "name", "valor" e "type" são obrigatórios' },
-        { status: 400 }
-      );
-    }
-    if (type !== 'entrada' && type !== 'saida') {
-      return NextResponse.json(
-        { error: 'O campo "type" deve ser "entrada" ou "saida"' },
-        { status: 400 }
-      );
-    }
-
-    const result = await new Promise((resolve, reject) => {
-      // 'function' para pegar o 'this.changes'
-      db.run(
-        'UPDATE projects SET name = ?, valor = ?, type = ? WHERE id = ?',
-        [name, valor, type, id],
-        function (err) {
-          if (err) reject(err);
-          // 'this.changes' diz quantas linhas foram afetadas
-          resolve({ changes: this.changes });
-        }
-      );
-    });
-
-    // Se nenhuma linha mudou, é porque o ID não foi encontrado
-    if (result.changes === 0) {
-      return NextResponse.json(
-        { error: 'Projeto não encontrado' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ id, name, valor, type });
-  } catch (error) {
-    // Trata o erro de restrição (CHECK) do banco
-    if (error.message.includes('CHECK constraint failed')) {
-      return NextResponse.json(
-        { error: 'O campo "type" deve ser "entrada" ou "saida"' },
-        { status: 400 }
-      );
-    }
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
-
-// ------------------------------------------------------------------
-// D - DELETE (Deletar UM projeto)
-// ------------------------------------------------------------------
-export async function DELETE(request, { params }) {
-  try {
-    const id = params.id;
-
-    const result = await new Promise((resolve, reject) => {
-      db.run('DELETE FROM projects WHERE id = ?', [id], function (err) {
-        if (err) reject(err);
-        resolve({ changes: this.changes });
-      });
-    });
-
-    if (result.changes === 0) {
-      return NextResponse.json(
-        { error: 'Projeto não encontrado' },
-        { status: 404 }
-      );
-    }
-
-    // Retorna uma resposta vazia com status 204 (No Content)
-    // ou uma mensagem de sucesso
-    return NextResponse.json({ message: 'Projeto deletado com sucesso' });
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('DELETE /api/projects/[id] error:', error);
+    return NextResponse.json({ success: false, error: 'Erro ao deletar projeto' }, { status: 500 });
   }
 }

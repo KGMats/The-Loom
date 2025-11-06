@@ -22,8 +22,8 @@ const seedDatabase = (db) => {
       type: 'GRAFICA',
       price: 0.8,
       wallet_address: '0xabcdef123456789012345678901234567890abcd',
-      status: 'WORKING',
-      progress: 60
+      status: 'PENDING',
+      progress: 0
     },
     {
       title: 'Fine-tuning GPT (Demo)',
@@ -31,8 +31,8 @@ const seedDatabase = (db) => {
       type: 'IA',
       price: 1.2,
       wallet_address: '0xfedcba0987654321098765432109876543210fed',
-      status: 'COMPLETED',
-      progress: 100
+      status: 'PENDING',
+      progress: 0
     }
   ];
 
