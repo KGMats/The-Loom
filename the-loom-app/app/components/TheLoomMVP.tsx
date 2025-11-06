@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, useDisconnect, useConnect, useAccountModal } from '@rainbow-me/rainbowkit';
+import { useAccount, useDisconnect } from 'wagmi';
 
 // Types simples
 interface Project {

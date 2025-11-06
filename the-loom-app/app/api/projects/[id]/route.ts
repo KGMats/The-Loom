@@ -1,193 +1,83 @@
-// app/api/projects/[id]/route.js - API MVP SIMPLIFICADA
+// Em: app/api/projects/[id]/route.ts
 import { NextResponse } from 'next/server';
-import { runQuery, getQuery } from '../../../../database_mvp.js';
+import db from '@/lib/database.js';
 
-// GET - Buscar projeto por ID
-export async function GET(request, { params }) {
+// ----------------------------------------------------
+// PUT /api/projects/[id] (ATUALIZAR um projeto)
+// ----------------------------------------------------
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params;
+    const id = params.id;
+    // O frontend pode enviar campos parciais
+    const body = await request.json();
 
-    if (!id || isNaN(id)) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID inválido' 
-        },
-        { status: 400 }
-      );
-    }
-
-    const project = await getQuery(
-      'SELECT * FROM projects WHERE id = ?',
-      [id]
-    );
-
-    if (!project) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Projeto não encontrado' 
-        },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      project
+    // Busca o projeto atual
+    const project = await new Promise<any>((resolve, reject) => {
+      db.get('SELECT * FROM projects WHERE id = ?', [id], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
     });
+    if (!project) {
+      return NextResponse.json({ error: 'Projeto não encontrado' }, { status: 404 });
+    }
 
-  } catch (error) {
-    console.error('Erro ao buscar projeto:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Erro ao buscar projeto',
-        message: error.message 
-      },
-      { status: 500 }
-    );
+    // Mapeia e mescla os campos (Frontend -> Banco)
+    const updatedData = {
+      name: body.title !== undefined ? body.title : project.name,
+      description: body.description !== undefined ? body.description : project.description,
+      valor: body.price !== undefined ? body.price : project.valor,
+      type: body.type !== undefined ? body.type : project.type,
+      status: body.status !== undefined ? body.status : project.status,
+      progress: body.progress !== undefined ? body.progress : project.progress,
+    };
+
+    await new Promise<void>((resolve, reject) => {
+      db.run(
+        'UPDATE projects SET name = ?, description = ?, valor = ?, type = ?, status = ?, progress = ? WHERE id = ?',
+        [
+          updatedData.name,
+          updatedData.description,
+          updatedData.valor,
+          updatedData.type,
+          updatedData.status,
+          updatedData.progress,
+          id
+        ],
+        function (err) {
+          if (err) reject(err);
+          resolve();
+        }
+      );
+    });
+    
+    return NextResponse.json({ id, ...updatedData });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// PUT - Atualizar projeto
-export async function PUT(request, { params }) {
+// ----------------------------------------------------
+// DELETE /api/projects/[id] (DELETAR um projeto)
+// ----------------------------------------------------
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = params;
-    const data = await request.json();
+    const id = params.id;
 
-    if (!id || isNaN(id)) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID inválido' 
-        },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se o projeto existe
-    const existingProject = await getQuery(
-      'SELECT * FROM projects WHERE id = ?',
-      [id]
-    );
-
-    if (!existingProject) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Projeto não encontrado' 
-        },
-        { status: 404 }
-      );
-    }
-
-    // Campos atualizáveis
-    const allowedFields = ['title', 'description', 'status', 'progress'];
-    const updates = [];
-    const values = [];
-
-    Object.keys(data).forEach(key => {
-      if (allowedFields.includes(key) && data[key] !== undefined) {
-        updates.push(`${key} = ?`);
-        values.push(data[key]);
-      }
+    const result = await new Promise<{ changes: number }>((resolve, reject) => {
+      db.run('DELETE FROM projects WHERE id = ?', [id], function (err) {
+        if (err) reject(err);
+        resolve({ changes: this.changes });
+      });
     });
 
-    if (updates.length === 0) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Nenhum campo válido para atualizar' 
-        },
-        { status: 400 }
-      );
+    if (result.changes === 0) {
+      return NextResponse.json({ error: 'Projeto não encontrado' }, { status: 404 });
     }
 
-    values.push(id);
-
-    await runQuery(
-      `UPDATE projects SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
-
-    // Buscar o projeto atualizado
-    const updatedProject = await getQuery(
-      'SELECT * FROM projects WHERE id = ?',
-      [id]
-    );
-
-    return NextResponse.json({
-      success: true,
-      message: 'Projeto atualizado com sucesso!',
-      project: updatedProject
-    });
-
-  } catch (error) {
-    console.error('Erro ao atualizar projeto:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Erro ao atualizar projeto',
-        message: error.message 
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE - Deletar projeto
-export async function DELETE(request, { params }) {
-  try {
-    const { id } = params;
-
-    if (!id || isNaN(id)) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'ID inválido' 
-        },
-        { status: 400 }
-      );
-    }
-
-    // Verificar se o projeto existe
-    const project = await getQuery(
-      'SELECT * FROM projects WHERE id = ?',
-      [id]
-    );
-
-    if (!project) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Projeto não encontrado' 
-        },
-        { status: 404 }
-      );
-    }
-
-    // Deletar
-    await runQuery(
-      'DELETE FROM projects WHERE id = ?',
-      [id]
-    );
-
-    return NextResponse.json({
-      success: true,
-      message: 'Projeto deletado com sucesso!'
-    });
-
-  } catch (error) {
-    console.error('Erro ao deletar projeto:', error);
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Erro ao deletar projeto',
-        message: error.message 
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: 'Projeto deletado' });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }// Em: app/api/projects/[id]/route.js
 
