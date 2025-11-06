@@ -10,6 +10,7 @@ import {
   argentWallet,
   trustWallet,
   ledgerWallet,
+  metaMaskWallet
 } from '@rainbow-me/rainbowkit/wallets'; // Importar as carteiras que queremos adicionar
 import { WagmiProvider } from 'wagmi';
 import {
@@ -36,7 +37,7 @@ const config = getDefaultConfig({
   wallets: [
     {
       groupName: 'Suggested', // Um grupo extra que você quer mostrar
-      wallets: [argentWallet, trustWallet, ledgerWallet],
+      wallets: [argentWallet, trustWallet, ledgerWallet, metaMaskWallet],
     },
   ],
   
@@ -60,11 +61,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={config}> 
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
-          theme={darkTheme({
-            accentColor: '#7b3fe4',
-            accentColorForeground: 'white',
-            borderRadius: 'medium',
-          })}
+          theme={darkTheme()}
         >
           {children}
         </RainbowKitProvider>

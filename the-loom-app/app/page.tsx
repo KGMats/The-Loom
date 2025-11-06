@@ -1,5 +1,4 @@
 import Image from "next/image";
-
 import { CustomConnectButton } from "./components/ConnectButton";
 
 export default function Home() {
