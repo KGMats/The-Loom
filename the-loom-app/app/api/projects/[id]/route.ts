@@ -1,261 +1,191 @@
+// app/api/projects/[id]/route.js - API MVP SIMPLIFICADA
 import { NextResponse } from 'next/server';
-import { getQuery, runQuery } from '../../../../../database.js';
+import { runQuery, getQuery } from '../../../../database_mvp.js';
 
-// ------------------------------------------------------------------
-// R - READ (Ler UM projeto específico)
-// ------------------------------------------------------------------
+// GET - Buscar projeto por ID
 export async function GET(request, { params }) {
   try {
-    const id = params.id;
+    const { id } = params;
 
-    if (!id || isNaN(parseInt(id))) {
+    if (!id || isNaN(id)) {
       return NextResponse.json(
-        { error: 'ID deve ser um número válido' },
+        { 
+          success: false, 
+          error: 'ID inválido' 
+        },
         { status: 400 }
       );
     }
 
     const project = await getQuery(
       'SELECT * FROM projects WHERE id = ?',
-      [parseInt(id)]
+      [id]
     );
 
     if (!project) {
       return NextResponse.json(
-        { error: 'Projeto não encontrado' },
+        { 
+          success: false, 
+          error: 'Projeto não encontrado' 
+        },
         { status: 404 }
       );
     }
 
-    // Parsear gpu_requirements se existir
-    if (project.gpu_requirements) {
-      try {
-        project.gpu_requirements = JSON.parse(project.gpu_requirements);
-      } catch (e) {
-        console.warn('Erro ao fazer parse de gpu_requirements:', e);
-        project.gpu_requirements = null;
-      }
-    }
+    return NextResponse.json({
+      success: true,
+      project
+    });
 
-    return NextResponse.json({ project });
   } catch (error) {
     console.error('Erro ao buscar projeto:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor ao buscar projeto' },
+      { 
+        success: false, 
+        error: 'Erro ao buscar projeto',
+        message: error.message 
+      },
       { status: 500 }
     );
   }
 }
 
-// ------------------------------------------------------------------
-// U - UPDATE (Atualizar UM projeto)
-// ------------------------------------------------------------------
+// PUT - Atualizar projeto
 export async function PUT(request, { params }) {
   try {
-    const id = params.id;
+    const { id } = params;
+    const data = await request.json();
 
-    if (!id || isNaN(parseInt(id))) {
+    if (!id || isNaN(id)) {
       return NextResponse.json(
-        { error: 'ID deve ser um número válido' },
+        { 
+          success: false, 
+          error: 'ID inválido' 
+        },
         { status: 400 }
       );
     }
-
-    const { name, valor, type, description, gpu_requirements, status } = await request.json();
 
     // Verificar se o projeto existe
     const existingProject = await getQuery(
       'SELECT * FROM projects WHERE id = ?',
-      [parseInt(id)]
+      [id]
     );
 
     if (!existingProject) {
       return NextResponse.json(
-        { error: 'Projeto não encontrado' },
+        { 
+          success: false, 
+          error: 'Projeto não encontrado' 
+        },
         { status: 404 }
       );
     }
 
-    // Validações para campos que podem ser atualizados
-    const updateFields = [];
-    const updateParams = [];
+    // Campos atualizáveis
+    const allowedFields = ['title', 'description', 'status', 'progress'];
+    const updates = [];
+    const values = [];
 
-    if (name !== undefined) {
-      if (!name || typeof name !== 'string' || name.trim().length === 0) {
-        return NextResponse.json(
-          { error: 'Nome deve ser uma string válida' },
-          { status: 400 }
-        );
+    Object.keys(data).forEach(key => {
+      if (allowedFields.includes(key) && data[key] !== undefined) {
+        updates.push(`${key} = ?`);
+        values.push(data[key]);
       }
-      updateFields.push('name = ?');
-      updateParams.push(name.trim());
-    }
+    });
 
-    if (valor !== undefined) {
-      if (typeof valor !== 'number' || valor <= 0) {
-        return NextResponse.json(
-          { error: 'Valor deve ser um número positivo' },
-          { status: 400 }
-        );
-      }
-      updateFields.push('valor = ?');
-      updateParams.push(valor);
-    }
-
-    if (type !== undefined) {
-      if (type !== 'grafica' && type !== 'IA') {
-        return NextResponse.json(
-          { error: 'Tipo deve ser "grafica" ou "IA"' },
-          { status: 400 }
-        );
-      }
-      updateFields.push('type = ?');
-      updateParams.push(type);
-    }
-
-    if (description !== undefined) {
-      if (description && typeof description !== 'string') {
-        return NextResponse.json(
-          { error: 'Description deve ser uma string' },
-          { status: 400 }
-        );
-      }
-      updateFields.push('description = ?');
-      updateParams.push(description || null);
-    }
-
-    if (gpu_requirements !== undefined) {
-      if (gpu_requirements && typeof gpu_requirements !== 'object') {
-        return NextResponse.json(
-          { error: 'gpu_requirements deve ser um objeto JSON' },
-          { status: 400 }
-        );
-      }
-      const gpuReqJson = gpu_requirements ? JSON.stringify(gpu_requirements) : null;
-      updateFields.push('gpu_requirements = ?');
-      updateParams.push(gpuReqJson);
-    }
-
-    if (status !== undefined) {
-      if (!['pending', 'in_progress', 'completed', 'cancelled'].includes(status)) {
-        return NextResponse.json(
-          { error: 'Status deve ser: pending, in_progress, completed, ou cancelled' },
-          { status: 400 }
-        );
-      }
-      updateFields.push('status = ?');
-      updateParams.push(status);
-    }
-
-    // Adicionar updated_at
-    updateFields.push('updated_at = CURRENT_TIMESTAMP');
-    updateParams.push(parseInt(id));
-
-    if (updateFields.length === 1) { // Apenas updated_at
+    if (updates.length === 0) {
       return NextResponse.json(
-        { error: 'Nenhum campo válido para atualizar' },
+        { 
+          success: false, 
+          error: 'Nenhum campo válido para atualizar' 
+        },
         { status: 400 }
       );
     }
 
-    const sql = `UPDATE projects SET ${updateFields.join(', ')} WHERE id = ?`;
-    
-    const result = await runQuery(sql, updateParams);
+    values.push(id);
 
-    if (result.changes === 0) {
-      return NextResponse.json(
-        { error: 'Nenhuma alteração foi feita' },
-        { status: 400 }
-      );
-    }
-
-    // Buscar projeto atualizado
-    const updatedProject = await getQuery(
-      'SELECT * FROM projects WHERE id = ?',
-      [parseInt(id)]
+    await runQuery(
+      `UPDATE projects SET ${updates.join(', ')} WHERE id = ?`,
+      values
     );
 
-    // Parsear gpu_requirements se existir
-    if (updatedProject.gpu_requirements) {
-      try {
-        updatedProject.gpu_requirements = JSON.parse(updatedProject.gpu_requirements);
-      } catch (e) {
-        console.warn('Erro ao fazer parse de gpu_requirements:', e);
-        updatedProject.gpu_requirements = null;
-      }
-    }
+    // Buscar o projeto atualizado
+    const updatedProject = await getQuery(
+      'SELECT * FROM projects WHERE id = ?',
+      [id]
+    );
 
     return NextResponse.json({
-      project: updatedProject,
-      message: 'Projeto atualizado com sucesso'
+      success: true,
+      message: 'Projeto atualizado com sucesso!',
+      project: updatedProject
     });
+
   } catch (error) {
     console.error('Erro ao atualizar projeto:', error);
-    
-    if (error.message.includes('CHECK constraint failed')) {
-      return NextResponse.json(
-        { error: 'Validações falharam. Verifique os dados enviados.' },
-        { status: 400 }
-      );
-    }
-    
     return NextResponse.json(
-      { error: 'Erro interno do servidor ao atualizar projeto' },
+      { 
+        success: false, 
+        error: 'Erro ao atualizar projeto',
+        message: error.message 
+      },
       { status: 500 }
     );
   }
 }
 
-// ------------------------------------------------------------------
-// D - DELETE (Deletar UM projeto)
-// ------------------------------------------------------------------
+// DELETE - Deletar projeto
 export async function DELETE(request, { params }) {
   try {
-    const id = params.id;
+    const { id } = params;
 
-    if (!id || isNaN(parseInt(id))) {
+    if (!id || isNaN(id)) {
       return NextResponse.json(
-        { error: 'ID deve ser um número válido' },
+        { 
+          success: false, 
+          error: 'ID inválido' 
+        },
         { status: 400 }
       );
     }
 
     // Verificar se o projeto existe
-    const existingProject = await getQuery(
+    const project = await getQuery(
       'SELECT * FROM projects WHERE id = ?',
-      [parseInt(id)]
+      [id]
     );
 
-    if (!existingProject) {
+    if (!project) {
       return NextResponse.json(
-        { error: 'Projeto não encontrado' },
+        { 
+          success: false, 
+          error: 'Projeto não encontrado' 
+        },
         { status: 404 }
       );
     }
 
-    const result = await runQuery(
+    // Deletar
+    await runQuery(
       'DELETE FROM projects WHERE id = ?',
-      [parseInt(id)]
+      [id]
     );
 
-    if (result.changes === 0) {
-      return NextResponse.json(
-        { error: 'Erro ao deletar projeto' },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json({
-      message: 'Projeto deletado com sucesso',
-      deletedProject: {
-        id: existingProject.id,
-        name: existingProject.name
-      }
+      success: true,
+      message: 'Projeto deletado com sucesso!'
     });
+
   } catch (error) {
     console.error('Erro ao deletar projeto:', error);
     return NextResponse.json(
-      { error: 'Erro interno do servidor ao deletar projeto' },
+      { 
+        success: false, 
+        error: 'Erro ao deletar projeto',
+        message: error.message 
+      },
       { status: 500 }
     );
   }

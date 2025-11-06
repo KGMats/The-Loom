@@ -1,9 +1,9 @@
-import { CustomConnectButton } from "./components/ConnectButton";
+import  TheLoomMVP  from "./components/TheLoomMVP";
 
 export default function Home() {
   return (
     <div>
-      <CustomConnectButton />
+      <TheLoomMVP />
     </div>
   );
 }
