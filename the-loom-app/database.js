@@ -1,3 +1,5 @@
+
+
 import sqlite3 from 'sqlite3';
 
 const verboseSqlite = sqlite3.verbose();
@@ -5,11 +7,9 @@ const DB_FILE = './the-loom-hackathon.db';
 
 // Esta função vai popular nossos dados de demonstração
 const seedDatabase = (db) => {
-  // Usamos os dados de exemplo do seu arquivo seed.ts
   const demoProjects = [
     {
       title: 'Treinamento de Modelo CNN (Demo)',
-      slug: 'treinamento-cnn-demo',
       description: 'Treinamento de rede neural para classificação de imagens médicas.',
       type: 'IA',
       price: 2.5,
@@ -21,7 +21,6 @@ const seedDatabase = (db) => {
     },
     {
       title: 'Renderização 3D - Arquitetura (Demo)',
-      slug: 'renderizacao-3d-demo',
       description: 'Renderização fotorrealística de projeto arquitetônico.',
       type: 'GRAFICA',
       price: 0.8,
@@ -33,7 +32,6 @@ const seedDatabase = (db) => {
     },
     {
       title: 'Fine-tuning GPT (Demo)',
-      slug: 'fine-tuning-gpt-demo',
       description: 'Ajuste fino de modelo de linguagem para análise de sentimentos.',
       type: 'IA',
       price: 1.2,
@@ -47,13 +45,13 @@ const seedDatabase = (db) => {
 
   console.log('Banco de dados vazio. Populando com dados de demonstração...');
   const stmt = db.prepare(`
-    INSERT INTO projects (title, slug, description, type, price, wallet_address, status, progress, created_at, cloud_link, script_path) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO projects (title, description, type, price, wallet_address, status, progress, created_at, cloud_link, script_path) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   
   demoProjects.forEach(p => {
     stmt.run(
-      p.title, p.slug, p.description, p.type, p.price, p.wallet_address,
+      p.title, p.description, p.type, p.price, p.wallet_address,
       p.status, p.progress, new Date().toISOString(),
       p.cloud_link || null,
       p.script_path || null
@@ -64,13 +62,14 @@ const seedDatabase = (db) => {
 };
 
 const db = new verboseSqlite.Database(DB_FILE, (err) => {
-  // ... (código de conexão) ...
+  if (err) return console.error('Erro ao conectar ao banco de dados:', err.message);
+  console.log('Conectado ao banco de dados SQLite.');
+
   db.serialize(() => {
-    // Passo 1: Criar a tabela (Substitui o migrate.ts / schema.sql)
+    // Tabela principal de projetos
     db.run(`CREATE TABLE IF NOT EXISTS projects (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL, 
-      slug TEXT NOT NULL UNIQUE,
       description TEXT,
       type TEXT NOT NULL CHECK(type IN ('IA', 'GRAFICA')),
       price REAL NOT NULL,
@@ -78,15 +77,26 @@ const db = new verboseSqlite.Database(DB_FILE, (err) => {
       status TEXT DEFAULT 'PENDING' NOT NULL,
       progress INTEGER DEFAULT 0 NOT NULL,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      
-      -- Campos para links e anexos --
       cloud_link TEXT,
       script_path TEXT,
-      external_links TEXT, -- Armazenado como JSON string
+      external_links TEXT,
       attachment_info TEXT
     )`);
 
-    // Passo 2: Verificar se a tabela está vazia e popular (Substitui o seed.ts)
+    // Nova tabela para gerenciar slugs temporários
+    db.run(`CREATE TABLE IF NOT EXISTS job_claims (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      expires_at DATETIME NOT NULL,
+      FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE CASCADE
+    )`);
+
+    // Limpa slugs expirados ao iniciar (boa prática)
+    db.run(`DELETE FROM job_claims WHERE expires_at < CURRENT_TIMESTAMP`);
+
+    // Popula o banco de dados se estiver vazio
     db.get('SELECT COUNT(*) as count FROM projects', (err, row) => {
       if (err) return console.error('Erro ao contar projetos:', err.message);
       
@@ -99,9 +109,7 @@ const db = new verboseSqlite.Database(DB_FILE, (err) => {
   });
 });
 
-// --- As 3 funções de Query para sua API ---
-// (Exatamente como na resposta anterior)
-
+// --- Funções de Query para a API ---
 export const runQuery = (sql, params = []) => {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {

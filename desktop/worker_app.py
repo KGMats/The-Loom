@@ -15,26 +15,33 @@ DOWNLOAD_DIR = "worker_jobs"
 # --- Funções de Lógica --- #
 
 def fetch_job_data(slug, ui_elements):
-    """Busca os dados do job em uma thread separada para não bloquear a UI."""
+    """Busca e consome o slug de um job em uma thread separada."""
     log_area = ui_elements["log_area"]
-    log_area.log("Buscando job com slug: {}".format(slug))
+    log_area.log(f"Consumindo job com slug temporário: {slug}")
     
     try:
-        response = requests.get(f"{API_BASE_URL}/projects/slug/{slug}")
+        # A URL agora aponta para a nova rota de consumo de slug
+        response = requests.get(f"{API_BASE_URL}/jobs/claim/{slug}")
         response.raise_for_status() # Lança erro para respostas 4xx/5xx
         
         data = response.json()
         if data.get("success"):            
-            log_area.log("Job encontrado com sucesso!")
+            log_area.log("Job consumido e dados recebidos com sucesso!")
             # Passa os dados para a função de atualização da UI
             ui_elements["root"].after(0, update_ui_with_job_data, data["project"], ui_elements)
         else:
-            log_area.log(f"Erro: {data.get('error', 'Erro desconhecido')}", "error")
-            messagebox.showerror("Erro", data.get('error', 'Não foi possível encontrar o job.'))
+            error_message = data.get('error', 'Erro desconhecido ao consumir o slug.')
+            log_area.log(f"Erro: {error_message}", "error")
+            messagebox.showerror("Erro", error_message)
 
     except requests.exceptions.RequestException as e:
-        log_area.log(f"Erro de conexão: {e}", "error")
-        messagebox.showerror("Erro de Conexão", f"Não foi possível conectar à API. Verifique se o servidor está rodando.\n\n{e}")
+        # Trata erros de conexão e status HTTP (404, 500, etc.)
+        if e.response is not None and e.response.status_code == 404:
+            log_area.log("Erro: Slug inválido ou expirado.", "error")
+            messagebox.showerror("Erro 404", "Slug inválido ou expirado. Peça um novo slug.")
+        else:
+            log_area.log(f"Erro de conexão: {e}", "error")
+            messagebox.showerror("Erro de Conexão", f"Não foi possível conectar à API. Verifique se o servidor está rodando.\n\n{e}")
     except Exception as e:
         log_area.log(f"Ocorreu um erro inesperado: {e}", "error")
         messagebox.showerror("Erro Inesperado", str(e))
