@@ -11,10 +11,13 @@ const seedDatabase = (db) => {
       title: 'Treinamento de Modelo CNN (Demo)',
       description: 'Treinamento de rede neural para classificação de imagens médicas.',
       type: 'IA',
-      price: 2.5, // Simplifiquei 'valor' e 'reward_amount' para 'price'
+      price: 2.5,
       wallet_address: '0x1234567890123456789012345678901234567890',
       status: 'PENDING',
-      progress: 0
+      progress: 0,
+      // Nossos novos campos (podem ser nulos para os demos)
+      cloud_link: 'http://example.com/datasets/cnn-med-images.zip', 
+      script_path: '/demo/cnn-script.py'
     },
     {
       title: 'Renderização 3D - Arquitetura (Demo)',
@@ -23,7 +26,10 @@ const seedDatabase = (db) => {
       price: 0.8,
       wallet_address: '0xabcdef123456789012345678901234567890abcd',
       status: 'PENDING',
-      progress: 0
+      progress: 0,
+
+      cloud_link: 'http://example.com/datasets/cnn-med-images.zip', 
+      script_path: '/demo/cnn-script.py'
     },
     {
       title: 'Fine-tuning GPT (Demo)',
@@ -32,45 +38,35 @@ const seedDatabase = (db) => {
       price: 1.2,
       wallet_address: '0xfedcba0987654321098765432109876543210fed',
       status: 'PENDING',
-      progress: 0
+      progress: 0,
+
+      cloud_link: 'http://example.com/datasets/cnn-med-images.zip', 
+      script_path: '/demo/cnn-script.py'
     }
   ];
 
   console.log('Banco de dados vazio. Populando com dados de demonstração...');
   const stmt = db.prepare(`
-    INSERT INTO projects (title, description, type, price, wallet_address, status, progress, created_at) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO projects (title, description, type, price, wallet_address, status, progress, created_at, cloud_link, script_path) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   
   demoProjects.forEach(p => {
     stmt.run(
-      p.title,
-      p.description,
-      p.type,
-      p.price,
-      p.wallet_address,
-      p.status,
-      p.progress,
-      new Date().toISOString()
+      p.title, p.description, p.type, p.price, p.wallet_address,
+      p.status, p.progress, new Date().toISOString(),
+      p.cloud_link || null, // Adiciona o link
+      p.script_path || null // Adiciona o path
     );
   });
   
-  stmt.finalize((err) => {
-    if (err) console.error('Erro ao popular dados:', err.message);
-    else console.log('✅ Banco de dados populado com 3 projetos de demonstração.');
-  });
+  stmt.finalize(/* ... */);
 };
 
 const db = new verboseSqlite.Database(DB_FILE, (err) => {
-  if (err) {
-    return console.error('Erro ao abrir o banco (MVP):', err.message);
-  }
-  console.log('Conectado ao SQLite (MVP).');
-
-  // db.serialize garante que os comandos rodem em ordem (um após o outro)
+  // ... (código de conexão) ...
   db.serialize(() => {
     // Passo 1: Criar a tabela (Substitui o migrate.ts / schema.sql)
-    // Usamos os campos que o seu frontend e API esperam
     db.run(`CREATE TABLE IF NOT EXISTS projects (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       title TEXT NOT NULL, 
@@ -80,7 +76,13 @@ const db = new verboseSqlite.Database(DB_FILE, (err) => {
       wallet_address TEXT,
       status TEXT DEFAULT 'PENDING' NOT NULL,
       progress INTEGER DEFAULT 0 NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      
+      -- Campos para links e anexos --
+      cloud_link TEXT,
+      script_path TEXT,
+      external_links TEXT, -- Armazenado como JSON string
+      attachment_info TEXT
     )`);
 
     // Passo 2: Verificar se a tabela está vazia e popular (Substitui o seed.ts)

@@ -14,12 +14,15 @@ interface Project {
   title: string;
   description: string;
   type: 'IA' | 'GRAFICA';
-  
   price: number;
   wallet_address: string;
   status: 'PENDING' | 'WORKING' | 'COMPLETED';
   progress: number;
   created_at: string;
+  cloud_link?: string;
+  script_path?: string;
+  external_links?: string[];
+  attachment_info?: string;
 }
 
 interface CreateProjectData {
@@ -28,6 +31,9 @@ interface CreateProjectData {
   type: 'IA' | 'GRAFICA';
   price: number;
   wallet_address: string;
+  cloud_link: string;
+  external_links?: string[];
+  attachment_info?: string;
 }
 
 // Hook para buscar projetos
@@ -38,11 +44,24 @@ const fetchProjects = async (): Promise<{ success: boolean; projects: Project[] 
 };
 
 // Hook para criar projeto
-const createProject = async (data: CreateProjectData) => {
+// Hook para criar projeto (ATUALIZADO PARA FORMDATA)
+const createProject = async ({ payload, file }: { payload: CreateProjectData, file: File | null }) => {
+  const formData = new FormData();
+
+  // Adiciona todos os campos de texto
+  Object.keys(payload).forEach(key => {
+    formData.append(key, (payload as any)[key]);
+  });
+
+  // Adiciona o arquivo se ele existir
+  if (file) {
+    formData.append('script_file', file, file.name);
+  }
+
   const response = await fetch('/api/projects', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    // NÃO defina Content-Type, o browser faz isso por você com FormData
+    body: formData, 
   });
   if (!response.ok) throw new Error('Erro ao criar projeto');
   return response.json();
@@ -77,6 +96,9 @@ export default function TheLoomMVP() {
     type: 'IA',
     price: 0,
     wallet_address: '',
+    cloud_link: '',
+    external_links: [],
+    attachment_info: ''
   });
 
   const queryClient = useQueryClient();
@@ -99,11 +121,12 @@ export default function TheLoomMVP() {
   });
 
   const createMutation = useMutation({
-    mutationFn: createProject,
+    mutationFn: createProject, // Agora usa a função de FormData
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] });
       setIsModalOpen(false);
-      setFormData({ title: '', description: '', type: 'IA', price: 0, wallet_address: '' });
+      // Limpa o formulário com o campo novo
+      setFormData({ title: '', description: '', type: 'IA', price: 0, wallet_address: '', cloud_link: '' });
     },
   });
 
@@ -133,18 +156,21 @@ export default function TheLoomMVP() {
     if (editingProject) {
       updateMutation.mutate({ id: editingProject.id, data: dataToSend });
     } else {
-      createMutation.mutate(dataToSend);
+      // Pass both payload and file as required by the createProject function
+      createMutation.mutate({ payload: dataToSend, file: null });
     }
   };
 
   const handleEdit = (project: Project) => {
     setEditingProject(project);
+    // ATUALIZADO para incluir cloud_link
     setFormData({
       title: project.title,
       description: project.description,
       type: project.type,
       price: project.price,
       wallet_address: project.wallet_address,
+      cloud_link: project.cloud_link || '', // Adicionado
     });
     setIsModalOpen(true);
   };
@@ -216,22 +242,8 @@ export default function TheLoomMVP() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-3xl font-bold text-gray-900">🏗️ The Loom</h1>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                {address ? `💰 ${address.slice(0, 6)}...${address.slice(-4)}` : 'Carteira não conectada'}
-              </span>
-              <ConnectButton />
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* ... (Header) ... */}
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
         <ProjectStats projects={data?.projects || []} />
@@ -241,7 +253,17 @@ export default function TheLoomMVP() {
           <button
             onClick={() => {
               setEditingProject(null);
-              setFormData({ title: '', description: '', type: 'IA', price: 0, wallet_address: '' });
+              // Reset form data with all fields
+              setFormData({
+                title: '',
+                description: '',
+                type: 'IA',
+                price: 0,
+                wallet_address: '',
+                cloud_link: '',
+                external_links: [],
+                attachment_info: ''
+              });
               setIsModalOpen(true);
             }}
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
@@ -264,13 +286,21 @@ export default function TheLoomMVP() {
           <CreateProject
             initial={editingProject || undefined}
             onCancel={() => setIsModalOpen(false)}
-            onSubmit={(payload) => {
+            
+            // --- ESTA É A MUDANÇA PRINCIPAL ---
+            // O onSubmit agora passa (payload, file)
+            onSubmit={(payload, file) => {
+              const dataToSend = { ...payload, wallet_address: payload.wallet_address || address || '' };
               if (editingProject) {
-                updateMutation.mutate({ id: editingProject.id, data: { ...payload, wallet_address: payload.wallet_address || address || '' } });
+                // (Nota: a edição de arquivo é mais complexa, focando na criação por enquanto)
+                updateMutation.mutate({ id: editingProject.id, data: dataToSend });
               } else {
-                createMutation.mutate({ ...payload, wallet_address: payload.wallet_address || address || '' });
+                // Envia o payload E o file para a mutação
+                createMutation.mutate({ payload: dataToSend, file });
               }
             }}
+            // --- FIM DA MUDANÇA ---
+
             loading={createMutation.isPending || updateMutation.isPending}
             isEditing={!!editingProject}
           />

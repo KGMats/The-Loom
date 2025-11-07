@@ -6,6 +6,6 @@ import { AuthSyncer } from './AuthWallet';
 export const CustomConnectButton = () => {
   return <div>
     <AuthSyncer />
-    <ConnectButton />
+    <ConnectButton label='Connect Wallet' />
   </div>;
 };
