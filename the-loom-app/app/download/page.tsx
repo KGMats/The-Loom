@@ -1,6 +1,7 @@
 'use client';
 
 import '../styles/download.css';
+import '../styles/home.css';
 import MainSection from '../components/MainSection';
 import { useEffect, useState } from 'react';
 

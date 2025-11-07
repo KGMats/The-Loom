@@ -16,17 +16,33 @@ interface Project {
   created_at: string;
   cloud_link?: string;
   script_path?: string;
-  external_links?: string[];
+  external_links?: string; // Vem como string do DB
   attachment_info?: string;
 }
 
 const isValidWalletAddress = (address: string) => /^0x[a-fA-F0-9]{40}$/.test(address);
 
+// Função helper para parsear external_links
+function parseProject(project: any) {
+  if (project.external_links) {
+    try {
+      project.external_links = JSON.parse(project.external_links);
+    } catch (e) {
+      project.external_links = [];
+    }
+  }
+  return project;
+}
+
 // GET /api/projects - lista todos os projetos
 export async function GET() {
   try {
     const projects = await allQuery('SELECT * FROM projects ORDER BY id DESC');
-    return NextResponse.json({ success: true, projects });
+    
+    // 🔥 CORREÇÃO: Parse external_links para cada projeto
+    const parsedProjects = projects.map(parseProject);
+    
+    return NextResponse.json({ success: true, projects: parsedProjects });
   } catch (error: any) {
     console.error('GET /api/projects error:', error);
     return NextResponse.json({ success: false, error: 'Erro ao carregar projetos' }, { status: 500 });
@@ -38,7 +54,6 @@ export async function POST(request: Request) {
   try {
     const data = await request.formData();
     
-    // Campos básicos
     const title = data.get('title') as string;
     const description = data.get('description') as string;
     const type = data.get('type') as 'IA' | 'GRAFICA';
@@ -46,12 +61,10 @@ export async function POST(request: Request) {
     const wallet_address = data.get('wallet_address') as string;
     const cloud_link = data.get('cloud_link') as string;
     
-    // Campos novos
     const externalLinksStr = data.get('external_links');
     const external_links = externalLinksStr ? JSON.parse(externalLinksStr as string) : [];
     const attachment_info = data.get('attachment_info') as string;
     
-    // Arquivo
     const file = data.get('script_file') as File | null;
 
     // Validações
@@ -69,11 +82,10 @@ export async function POST(request: Request) {
 
     let scriptPath: string | null = null;
 
-    // Processar arquivo, se existir
+    // Processar arquivo
     if (file) {
       const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
       
-      // Criar diretório de uploads se não existir
       if (!existsSync(uploadsDir)) {
         await mkdir(uploadsDir, { recursive: true });
       }
@@ -113,16 +125,8 @@ export async function POST(request: Request) {
 
     const inserted = await getQuery('SELECT * FROM projects WHERE id = ?', [result.lastID]);
     
-    // Parse external_links back to array before sending response
-    if (inserted && inserted.external_links) {
-      try {
-        inserted.external_links = JSON.parse(inserted.external_links);
-      } catch (e) {
-        inserted.external_links = [];
-      }
-    }
-
-    return NextResponse.json({ success: true, project: inserted }, { status: 201 });
+    // 🔥 CORREÇÃO: Parse antes de retornar
+    return NextResponse.json({ success: true, project: parseProject(inserted) }, { status: 201 });
   } catch (error: any) {
     console.error('POST /api/projects error:', error);
     
