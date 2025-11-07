@@ -9,11 +9,11 @@ const config: Config = {
   favicon: 'img/favicon.ico',
 
   // URL do seu site (GitHub Pages ou domínio customizado)
-  url: 'https://your-username.github.io',
+  url: 'https://a-r-ka.github.io',
   baseUrl: '/the-loom/', // Nome do repositório
 
   // GitHub pages deployment
-  organizationName: 'your-username', // Seu GitHub username
+  organizationName: 'a-r-ka', // Seu GitHub username
   projectName: 'the-loom', // Nome do repo
 
   onBrokenLinks: 'throw',

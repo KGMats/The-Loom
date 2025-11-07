@@ -17,7 +17,7 @@ export default function MainSection() {
           <Link href="/post-job" className="nav-link">
             Post a job
           </Link>
-          <Link href="/explore" className="nav-link">
+          <Link href="/marketplace" className="nav-link">
             Explore Jobs
           </Link>
           <CustomConnectButton />

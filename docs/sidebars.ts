@@ -21,7 +21,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: '🏗️ Architecture',
       items: [
-        'architecture/overview', // Nota: este arquivo existe!
+        'getting-started/architecture/overview', // Nota: este arquivo existe!
         'architecture/frontend',
         'architecture/backend',
         'architecture/database',
@@ -63,7 +63,6 @@ const sidebars: SidebarsConfig = {
       items: [
         'for-judges/problem-solution',
         'for-judges/tech-stack',
-        'for-judges/demo-walkthrough',
         'for-judges/future-roadmap',
       ],
     },
