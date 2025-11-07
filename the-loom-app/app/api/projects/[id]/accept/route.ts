@@ -43,7 +43,7 @@ export async function POST(request: Request, context: any) {
     }
 
     // Verifica se quem está aceitando não é o criador do job
-    if (project.wallet_address?.toLowerCase() === wallet_address.toLowerCase()) {
+    if (project.wallet_address === wallet_address) {
       return NextResponse.json(
         { success: false, error: 'Você não pode aceitar seu próprio job' },
         { status: 400 }
@@ -65,10 +65,32 @@ export async function POST(request: Request, context: any) {
 
     const updated = await getQuery('SELECT * FROM projects WHERE id = ?', [id]);
     
+    // Gerar slug através da rota /claim
+    let slug = null;
+    try {
+      const claimResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/projects/${id}/claim`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (claimResponse.ok) {
+        const claimData = await claimResponse.json();
+        if (claimData.success && claimData.slug) {
+          slug = claimData.slug;
+        }
+      }
+    } catch (claimError) {
+      console.error('Erro ao gerar slug de claim:', claimError);
+      // Não falha a operação se o slug não puder ser gerado
+    }
+    
     return NextResponse.json({
       success: true,
       message: 'Job aceito com sucesso',
-      project: updated
+      project: updated,
+      slug: slug
     });
   } catch (error: any) {
     console.error('POST /api/projects/[id]/accept error:', error);

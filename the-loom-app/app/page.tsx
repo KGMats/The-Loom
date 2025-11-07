@@ -81,7 +81,36 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        
       </div>
+      {/* Sponsors Section */}
+        <section className="sponsors-section">
+          <h3 className="sponsors-title">Sponsors</h3>
+          <div className="sponsors-grid">
+            <div className="sponsor-logo">
+              <img src="./styles/img/chainlink.svg" alt="Chainlink" />
+            </div>
+            <div className="sponsor-logo">
+              <img src="./styles/img/fhenix.svg" alt="Fhenix" />
+            </div>
+            <div className="sponsor-logo">
+              <img src="./styles/img/arbitrum.svg" alt="Arbitrum" />
+            </div>
+            <div className="sponsor-logo">
+              <img src="./styles/img/ETH.Build.svg" alt="ETH.Build" />
+            </div>
+            <div className="sponsor-logo">
+              <img src="./styles/img/flow.svg" alt="Flow" />
+            </div>
+            <div className="sponsor-logo">
+              <img src="./styles/img/zama.svg" alt="ZAMA" />
+            </div>
+            <div className="sponsor-logo">
+              <img src="./styles/img/base.svg" alt="Base" />
+            </div>
+          </div>
+        </section>
     </div>
   );
 }

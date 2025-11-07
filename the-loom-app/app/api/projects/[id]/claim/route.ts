@@ -26,8 +26,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     const existingClaim = await getQuery('SELECT slug FROM job_claims WHERE project_id = ?', [projectId]);
     if (existingClaim) {
       return NextResponse.json(
-        { success: false, error: 'Este trabalho já foi reivindicado por outro usuário. Tente novamente em alguns minutos.' },
-        { status: 409 } // Conflict
+        { success: true, slug: existingClaim.slug }
       );
     }
 

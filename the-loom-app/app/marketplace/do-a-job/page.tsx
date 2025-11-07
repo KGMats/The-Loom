@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import MainSection from '../../components/MainSection';
 import '../../styles/do-a-job.css';
 import '../../styles/home.css';
@@ -21,6 +21,10 @@ export default function DoAJobPage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [accepting, setAccepting] = useState(false);
   const [acceptError, setAcceptError] = useState<string | null>(null);
+  const [showSlugModal, setShowSlugModal] = useState(false);
+  const [generatedSlug, setGeneratedSlug] = useState<string | null>(null);
+  const [currentSlug, setCurrentSlug] = useState<string | null>(null);
+  const [loadingSlug, setLoadingSlug] = useState(false);
 
   // Check if the current user is the job creator
   const isMyJob = (currentJobData && address && 
@@ -30,7 +34,7 @@ export default function DoAJobPage() {
   const projectData = currentJobData?.raw || currentJobData;
 
   // Check if job is already accepted by current user
-  const isAcceptedByMe = address && projectData?.wallet_address_secondary === address;
+  const isAcceptedByMe = address && (projectData?.wallet_address_secondary === address);
   const isJobAccepted = projectData?.wallet_address_secondary && !isAcceptedByMe;
 
   // Build requirements list from database fields
@@ -75,6 +79,41 @@ export default function DoAJobPage() {
 
   const requirements = getRequirements();
 
+  // Buscar slug se o job foi aceito pelo usuário atual
+  const fetchCurrentSlug = async () => {
+    if (!projectData?.id || !isAcceptedByMe) {
+      return;
+    }
+
+    setLoadingSlug(true);
+    try {
+      const response = await fetch(`/api/projects/${projectData.id}/claim`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.slug) {
+          setCurrentSlug(data.slug);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar slug:', error);
+    } finally {
+      setLoadingSlug(false);
+    }
+  };
+
+  // Buscar slug quando o componente monta e o job foi aceito
+  useEffect(() => {
+    if (isAcceptedByMe && projectData?.id) {
+      fetchCurrentSlug();
+    }
+  }, [isAcceptedByMe, projectData?.id]);
+
   const handleAcceptJob = async () => {
     if (!address) {
       alert('Por favor, conecte sua carteira primeiro');
@@ -113,6 +152,13 @@ export default function DoAJobPage() {
       
       setCurrentJobData(updatedJobData);
       setShowConfirmModal(false);
+      
+      // Mostrar popup com o slug se foi gerado
+      if (data.slug) {
+        setGeneratedSlug(data.slug);
+        setCurrentSlug(data.slug); // Também define como slug atual
+        setShowSlugModal(true);
+      }
     } catch (err: any) {
       console.error('Error accepting job:', err);
       setAcceptError(err.message || 'Erro ao aceitar o job');
@@ -240,6 +286,64 @@ export default function DoAJobPage() {
           </div>
         )}
 
+        {/* Slug Section - só aparece se o usuário aceitou o job */}
+        {isAcceptedByMe && (
+          <div className="project-section slug-section">
+            <h2 className="section-title">
+              Job Access Code
+            </h2>
+            <div className="section-content">
+              {loadingSlug ? (
+                <p className="slug-loading">Loading code...</p>
+              ) : currentSlug ? (
+                <>
+                  <p className="slug-instructions">
+                    Use this code on <strong>The Loom Desktop App</strong> to start working:
+                  </p>
+                  <div className="slug-code-container">
+                    <code className="slug-code">
+                      {currentSlug}
+                    </code>
+                  </div>
+                  <div className="slug-actions">
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(currentSlug).then(() => {
+                          alert('Code copied to clipboard!');
+                        }).catch((err) => {
+                          console.error('Failed to copy code: ', err);
+                        });
+                      }}
+                      className="btn-secondary"
+                    >
+                      Copy Code
+                    </button>
+                    <button
+                      onClick={fetchCurrentSlug}
+                      className="btn-secondary"
+                    >
+                      Generate new code
+                    </button>
+                  </div>
+                  <p className="slug-warning">
+                    <strong>Attention:</strong> The code expires in 5 minutes after being generated.
+                  </p>
+                </>
+              ) : (
+                <div className="slug-empty">
+                  <p>No active code at the moment.</p>
+                  <button
+                    onClick={fetchCurrentSlug}
+                    className="btn-primary"
+                  >
+                    Generate Code
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="action-buttons">
           {!isMyJob && !isJobAccepted && !isAcceptedByMe ? (
@@ -291,6 +395,62 @@ export default function DoAJobPage() {
                 disabled={accepting}
               >
                 {accepting ? 'Processing...' : 'Accept & Commit Hardware'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Slug Modal */}
+      {showSlugModal && generatedSlug && (
+        <div className="confirm-modal-overlay" onClick={() => setShowSlugModal(false)}>
+          <div className="confirm-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2 className="confirm-modal-title">Job accepted with success!</h2>
+            
+            <p className="confirm-modal-text">
+              Use this code in the <strong>The Loom Desktop App</strong> to start working on the job:
+            </p>
+
+            <div style={{
+              background: '#f5f5f5',
+              padding: '20px',
+              borderRadius: '8px',
+              margin: '20px 0',
+              border: '2px solid #e0e0e0',
+              textAlign: 'center'
+            }}>
+              <code style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: '#333',
+                letterSpacing: '1px',
+                userSelect: 'all'
+              }}>
+                {generatedSlug}
+              </code>
+            </div>
+
+            <p className="confirm-modal-text" style={{ fontSize: '14px', color: '#666' }}>
+              <strong>Important:</strong> This code expires in 5 minutes. 
+              Copy it and paste it into the desktop app to download the job files and start processing.
+            </p>
+
+            <div className="confirm-modal-actions">
+              <button 
+                className="btn-modal-accept"
+                onClick={() => {
+                  navigator.clipboard.writeText(generatedSlug);
+                  alert('Slug copiado para a área de transferência!');
+                }}
+                style={{ marginRight: '10px' }}
+              >
+                Copy Code
+              </button>
+              <button 
+                className="btn-modal-cancel"
+                onClick={() => setShowSlugModal(false)}
+              >
+                Close
               </button>
             </div>
           </div>

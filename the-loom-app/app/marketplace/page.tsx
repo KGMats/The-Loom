@@ -13,7 +13,16 @@ export default function MarketplacePage() {
   const [maxEth, setMaxEth] = useState('')
   const [cpuChecked, setCpuChecked] = useState(false)
   const [gpuChecked, setGpuChecked] = useState(false)
-  const [vram, setVram] = useState('12GB')
+
+  // Função para resetar todos os filtros
+  const resetFilters = () => {
+    setSearchTerm('');
+    setSelectedCategory('All');
+    setMinEth('');
+    setMaxEth('');
+    setCpuChecked(false);
+    setGpuChecked(false);
+  };
 
   const categories = [
     'All',
@@ -26,6 +35,68 @@ export default function MarketplacePage() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Função para filtrar jobs
+  const filteredJobs = jobs.filter((job) => {
+    // Filtro de busca por texto
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        job.title.toLowerCase().includes(searchLower) ||
+        job.description.toLowerCase().includes(searchLower) ||
+        job.tags.toLowerCase().includes(searchLower);
+      
+      if (!matchesSearch) return false;
+    }
+
+    // Filtro de categoria
+    if (selectedCategory !== 'All') {
+      const jobType = job.raw?.type || '';
+      const categoryMap: Record<string, string[]> = {
+        'AI / Machine Learning': ['AI', 'ML', 'Machine Learning', 'Neural Network'],
+        '3D Rendering': ['3D', 'Rendering', 'Blender', 'Maya', '3ds Max'],
+        'Physics Simulation': ['Physics', 'Simulation', 'Bullet', 'OpenFOAM'],
+        'Video Processing': ['Video', 'Encoding', 'Processing', 'FFmpeg']
+      };
+
+      const categoryKeywords = categoryMap[selectedCategory] || [];
+      const matchesCategory = categoryKeywords.some(keyword => 
+        jobType.toLowerCase().includes(keyword.toLowerCase()) ||
+        job.title.toLowerCase().includes(keyword.toLowerCase()) ||
+        job.description.toLowerCase().includes(keyword.toLowerCase())
+      );
+
+      if (!matchesCategory) return false;
+    }
+
+    // Filtro de preço (ETH/valor)
+    if (minEth || maxEth) {
+      const priceString = job.price.replace(/[^0-9.]/g, ''); // Remove símbolos
+      const jobPrice = parseFloat(priceString) || 0;
+
+      if (minEth) {
+        const minPrice = parseFloat(minEth);
+        if (!isNaN(minPrice) && jobPrice < minPrice) return false;
+      }
+
+      if (maxEth) {
+        const maxPrice = parseFloat(maxEth);
+        if (!isNaN(maxPrice) && jobPrice > maxPrice) return false;
+      }
+    }
+
+    // Filtro de CPU
+    if (cpuChecked && !job.raw?.cpu) {
+      return false;
+    }
+
+    // Filtro de GPU
+    if (gpuChecked && !job.raw?.gpu) {
+      return false;
+    }
+
+    return true;
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -98,7 +169,16 @@ export default function MarketplacePage() {
             <div className="divider"></div>
 
             <div className="filter-section">
-              <h3 className="filter-title">Filters</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 className="filter-title" style={{ marginBottom: 0 }}>Filters</h3>
+                <button 
+                  onClick={resetFilters}
+                  className="reset-filters-btn"
+                  title="Reset all filters"
+                >
+                  Clear
+                </button>
+              </div>
               
               <div className="filter-group">
                 <label className="filter-label">Reward</label>
@@ -140,12 +220,6 @@ export default function MarketplacePage() {
                   </label>
                 </div>
               </div>
-
-              <div className="filter-group">
-                <label className="filter-label">
-                  VRAM: <span className="vram-value">{vram}</span>
-                </label>
-              </div>
             </div>
           </aside>
 
@@ -168,29 +242,43 @@ export default function MarketplacePage() {
             </div>
 
             {/* Jobs Title */}
-            <h2 className="jobs-title">Available Jobs</h2>
+            <h2 className="jobs-title">
+              Available Jobs {filteredJobs.length !== jobs.length && `(${filteredJobs.length} of ${jobs.length})`}
+            </h2>
 
             {/* Jobs List */}
-            <div className="jobs-list">
-              {jobs.map((job) => (
-                <article key={job.id} className="job-card">
-                  <div className="job-content">
-                    <div className="job-header">
-                      <Link className="job-link" href={{ pathname: '/marketplace/do-a-job', query: { job: JSON.stringify(job) } }}>
-                        <h3 className="job-title">{job.title}</h3>
-                      </Link>
-                      <div className="job-price">{job.price}</div>
+            {loading ? (
+              <div className="loading-message">Loading jobs...</div>
+            ) : error ? (
+              <div className="error-message">Error: {error}</div>
+            ) : filteredJobs.length === 0 ? (
+              <div className="no-jobs-message">
+                {jobs.length === 0 
+                  ? 'No jobs available at the moment.' 
+                  : 'No jobs match your filters. Try adjusting your search criteria.'}
+              </div>
+            ) : (
+              <div className="jobs-list">
+                {filteredJobs.map((job) => (
+                  <article key={job.id} className="job-card">
+                    <div className="job-content">
+                      <div className="job-header">
+                        <Link className="job-link" href={{ pathname: '/marketplace/do-a-job', query: { job: JSON.stringify(job) } }}>
+                          <h3 className="job-title">{job.title}</h3>
+                        </Link>
+                        <div className="job-price">{job.price}</div>
+                      </div>
+                      <p className="job-tags">Tags: {job.tags}</p>
+                      <p className="job-description">{job.description}</p>
+                      
+                      <div className="job-footer">
+                        <span className="job-posted">{job.posted}</span>
+                      </div>
                     </div>
-                    <p className="job-tags">Tags: {job.tags}</p>
-                    <p className="job-description">{job.description}</p>
-                    
-                    <div className="job-footer">
-                      <span className="job-posted">{job.posted}</span>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </main>
         </div>
       </div>

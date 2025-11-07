@@ -10,7 +10,7 @@
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
-:root {
+.marketplace-page {
   --bg-primary: #000000;
   --bg-secondary: #0a0a0a;
   --bg-card: #111111;
@@ -460,6 +460,48 @@ body {
     flex-direction: column;
     gap: 0.5rem;
   }
+}
+
+/* Reset Filters Button */
+.reset-filters-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reset-filters-btn:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}
+
+/* Loading and Error Messages */
+.loading-message,
+.error-message,
+.no-jobs-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.error-message {
+  color: #ff6b6b;
+}
+
+.no-jobs-message {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2rem;
+  margin: 2rem 0;
 }
 
 /* Dark mode otimizado */
