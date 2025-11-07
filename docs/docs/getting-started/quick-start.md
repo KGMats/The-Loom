@@ -78,7 +78,7 @@ You should see:
 3. Select your wallet (MetaMask, Coinbase, etc.)
 4. Approve the connection
 
-![Wallet Connection](../../static/img/wallet-connect.png)
+![Wallet Connection](/img/wallet-connect.png)
 
 ---
 

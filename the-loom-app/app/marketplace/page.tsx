@@ -56,7 +56,7 @@ export default function Marketplace() {
 
   return (
     <div className="marketplace-container">
-      <style dangerouslySetInnerHTML={{__html: 'html body { background: rgb(255, 255, 255); }'}} />
+      <style dangerouslySetInnerHTML={{__html: 'html body { background: rgb(0, 0, 0); }'}} />
       
       <div id="main">
         <div className="framer-DswEt framer-72rtr7" style={{ minHeight: '100vh', width: 'auto' }}>
@@ -220,7 +220,7 @@ export default function Marketplace() {
                 </div>
               </div>
 
-              {/* VRAM Filter */}
+              {/* Reward Filter */}
               <div className="framer-1htwiiy" data-framer-name="Reward" data-framer-component-type="RichTextContainer" style={{ justifyContent: 'center', transform: 'none' }}>
                 <p className="framer-text" style={{
                   fontFamily: '"Montserrat", "Montserrat Placeholder", sans-serif',
@@ -231,6 +231,7 @@ export default function Marketplace() {
                 </p>
               </div>
 
+              {/* VRAM Filter */}
               <div className="framer-1qqkw4" data-framer-name="Group 18">
                 <div className="framer-ivdk3w" data-framer-name="VRAM:" data-framer-component-type="RichTextContainer" style={{ justifyContent: 'center', transform: 'none' }}>
                   <p className="framer-text" style={{
@@ -238,7 +239,7 @@ export default function Marketplace() {
                     fontWeight: 300,
                     color: 'rgb(255, 255, 255)'
                   }}>
-                    VRAM:
+                    VRAM:{' '}
                   </p>
                 </div>
                 <div className="framer-1crdyll" data-framer-name="12GB" data-framer-component-type="RichTextContainer" style={{ justifyContent: 'center', transform: 'none' }}>
@@ -253,7 +254,7 @@ export default function Marketplace() {
                 </div>
               </div>
 
-              {/* Min/Max ETH */}
+              {/* Min/Max ETH Inputs */}
               <div className="framer-xx793w" data-framer-name="Group 8">
                 <div className="framer-13hvs3z" data-border="true" data-framer-name="Rectangle 10"></div>
                 <div className="framer-1c78ojr" data-framer-name="Min ETH" data-framer-component-type="RichTextContainer" style={{ justifyContent: 'center', transform: 'none' }}>
@@ -284,7 +285,16 @@ export default function Marketplace() {
                 </div>
               </div>
 
-              {/* CPU/GPU Checkboxes */}
+              {/* Divider Line */}
+              <div data-framer-component-type="SVG" data-framer-name="Line 19" className="framer-nrluqo" aria-hidden="true" style={{ imageRendering: 'pixelated', flexShrink: 0, fill: 'rgb(0, 0, 0)', color: 'rgb(0, 0, 0)' }}>
+                <div className="svgContainer" style={{ width: '100%', height: '100%', aspectRatio: 'inherit' }}>
+                  <svg style={{width:'100%',height:'100%'}} viewBox="0 0 36 3" preserveAspectRatio="none" width="100%" height="100%">
+                    <path d="M 0 1.5 L 36 1.5" fill="transparent" strokeWidth="1" stroke="rgb(255, 255, 255)" strokeOpacity="0.2"></path>
+                  </svg>
+                </div>
+              </div>
+
+              {/* CPU Checkbox */}
               <div className="framer-12i30s7" data-framer-name="Group 19">
                 <div className="framer-uhkgi1" data-framer-name="CPU" data-framer-component-type="RichTextContainer" style={{ justifyContent: 'center', transform: 'none' }}>
                   <p className="framer-text" style={{
@@ -295,8 +305,16 @@ export default function Marketplace() {
                     CPU
                   </p>
                 </div>
+                <div data-framer-component-type="SVG" data-framer-name="Frame" className="framer-pff81o" aria-hidden="true" style={{ imageRendering: 'pixelated', flexShrink: 0, fill: 'rgb(0, 0, 0)', color: 'rgb(0, 0, 0)' }}>
+                  <div className="svgContainer" style={{ width: '100%', height: '100%', aspectRatio: 'inherit' }}>
+                    <svg style={{width:'100%',height:'100%'}} viewBox="0 0 24 24" preserveAspectRatio="none" width="100%" height="100%">
+                      <rect width="24" height="24" fill="transparent" stroke="rgb(255, 255, 255)" strokeWidth="1" strokeOpacity="0.3" rx="4"></rect>
+                    </svg>
+                  </div>
+                </div>
               </div>
 
+              {/* GPU Checkbox */}
               <div className="framer-3ifyp4" data-framer-name="Group 20">
                 <div className="framer-u75fnc" data-framer-name="GPU" data-framer-component-type="RichTextContainer" style={{ justifyContent: 'center', transform: 'none' }}>
                   <p className="framer-text" style={{
@@ -304,9 +322,34 @@ export default function Marketplace() {
                     fontWeight: 300,
                     color: 'rgb(255, 255, 255)'
                   }}>
-                    GPU
+                    GPU{' '}
                   </p>
                 </div>
+                <div data-framer-component-type="SVG" data-framer-name="Frame" className="framer-1oor2m0" aria-hidden="true" style={{ imageRendering: 'pixelated', flexShrink: 0, fill: 'rgb(0, 0, 0)', color: 'rgb(0, 0, 0)' }}>
+                  <div className="svgContainer" style={{ width: '100%', height: '100%', aspectRatio: 'inherit' }}>
+                    <svg style={{width:'100%',height:'100%'}} viewBox="0 0 24 24" preserveAspectRatio="none" width="100%" height="100%">
+                      <rect width="24" height="24" fill="transparent" stroke="rgb(255, 255, 255)" strokeWidth="1" strokeOpacity="0.3" rx="4"></rect>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Another Divider Line */}
+              <div data-framer-component-type="SVG" data-framer-name="Line 20" className="framer-1hep7hx" aria-hidden="true" style={{ imageRendering: 'pixelated', flexShrink: 0, fill: 'rgb(0, 0, 0)', color: 'rgb(0, 0, 0)' }}>
+                <div className="svgContainer" style={{ width: '100%', height: '100%', aspectRatio: 'inherit' }}>
+                  <svg style={{width:'100%',height:'100%'}} viewBox="0 0 33 3" preserveAspectRatio="none" width="100%" height="100%">
+                    <path d="M 0 1.5 L 33 1.5" fill="transparent" strokeWidth="1" stroke="rgb(255, 255, 255)" strokeOpacity="0.2"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Divider */}
+            <div data-framer-component-type="SVG" data-framer-name="Line 18" className="framer-1nx8p1u" aria-hidden="true" style={{ imageRendering: 'pixelated', flexShrink: 0, fill: 'rgb(0, 0, 0)', color: 'rgb(0, 0, 0)' }}>
+              <div className="svgContainer" style={{ width: '100%', height: '100%', aspectRatio: 'inherit' }}>
+                <svg style={{width:'100%',height:'100%'}} viewBox="0 0 185 4" preserveAspectRatio="none" width="100%" height="100%">
+                  <path d="M 0 2 L 185 2" fill="transparent" strokeWidth="2" stroke="rgb(255, 255, 255)" strokeOpacity="0.15"></path>
+                </svg>
               </div>
             </div>
 
@@ -326,6 +369,16 @@ export default function Marketplace() {
             {/* Job Listings */}
             {jobs.map((job, index) => (
               <div key={job.id} className={`framer-${index === 0 ? '1fmj4rk' : index === 1 ? 'luzwuj' : index === 2 ? 'tg5kek' : index === 3 ? '1bsj2sm' : index === 4 ? '1dfk703' : 'sywcin'}`} data-framer-name={`Group ${12 + index}`}>
+                {/* Job Divider */}
+                <div data-framer-component-type="SVG" data-framer-name="Line 19" className="framer-1fuvfx4" aria-hidden="true" style={{ imageRendering: 'pixelated', flexShrink: 0, fill: 'rgb(0, 0, 0)', color: 'rgb(0, 0, 0)' }}>
+                  <div className="svgContainer" style={{ width: '100%', height: '100%', aspectRatio: 'inherit' }}>
+                    <svg style={{width:'100%',height:'100%'}} viewBox="0 0 897 3" preserveAspectRatio="none" width="100%" height="100%">
+                      <path d="M 0 1.5 L 897 1.5" fill="transparent" strokeWidth="1" stroke="rgb(255, 255, 255)" strokeOpacity="0.1"></path>
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Job Details */}
                 <div className="framer-1b09xdw" data-framer-name="Group 10">
                   <div className="framer-sv7c8l" data-framer-name="Tags" data-framer-component-type="RichTextContainer" style={{ justifyContent: 'center', transform: 'none' }}>
                     <p className="framer-text" style={{
@@ -359,6 +412,7 @@ export default function Marketplace() {
                   </div>
                 </div>
 
+                {/* Job Footer */}
                 <div className="framer-dnk489" data-framer-name="Group 11">
                   <div className="framer-1k6rl8v" data-framer-name="Posted" data-framer-component-type="RichTextContainer" style={{ justifyContent: 'center', transform: 'none' }}>
                     <p className="framer-text" style={{ color: 'rgb(136, 136, 136)' }}>
