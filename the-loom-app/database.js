@@ -4,65 +4,6 @@ const verboseSqlite = sqlite3.verbose();
 const DB_FILE = './the-loom-hackathon.db'; 
 
 // Esta função vai popular nossos dados de demonstração
-const seedDatabase = (db) => {
-  // Usamos os dados de exemplo do seu arquivo seed.ts
-  const demoProjects = [
-    {
-      title: 'Treinamento de Modelo CNN (Demo)',
-      description: 'Treinamento de rede neural para classificação de imagens médicas.',
-      type: 'AI',
-      price: 2.5,
-      wallet_address: '0x1234567890123456789012345678901234567890',
-      status: 'PENDING',
-      progress: 0,
-      // Nossos novos campos (podem ser nulos para os demos)
-      cloud_link: 'http://example.com/datasets/cnn-med-images.zip', 
-      script_path: '/demo/cnn-script.py'
-    },
-    {
-      title: 'Renderização 3D - Arquitetura (Demo)',
-      description: 'Renderização fotorrealística de projeto arquitetônico.',
-      type: '3D Rendering',
-      price: 3.0,
-      wallet_address: '0xabcdef123456789012345678901234567890abcd',
-      status: 'PENDING',
-      progress: 0,
-
-      cloud_link: 'http://example.com/datasets/cnn-med-images.zip', 
-      script_path: '/demo/cnn-script.py'
-    },
-    {
-      title: 'Fine-tuning GPT (Demo)',
-      description: 'Ajuste fino de modelo de linguagem para análise de sentimentos.',
-      type: 'Data Simulation',
-      price: 1.2,
-      wallet_address: '0xfedcba0987654321098765432109876543210fed',
-      status: 'PENDING',
-      progress: 0,
-
-      cloud_link: 'http://example.com/datasets/cnn-med-images.zip', 
-      script_path: '/demo/cnn-script.py'
-    }
-  ];
-
-  console.log('Banco de dados vazio. Populando com dados de demonstração...');
-  const stmt = db.prepare(`
-    INSERT INTO projects (title, description, type, price, wallet_address, status, progress, created_at, cloud_link, script_path) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-  
-  demoProjects.forEach(p => {
-    stmt.run(
-      p.title, p.description, p.type, p.price, p.wallet_address,
-      p.status, p.progress, new Date().toISOString(),
-      p.cloud_link || null, // Adiciona o link
-      p.script_path || null // Adiciona o path
-    );
-  });
-  
-  stmt.finalize(/* ... */);
-};
-
 const db = new verboseSqlite.Database(DB_FILE, (err) => {
   if (err) return console.error('Erro ao conectar ao banco de dados:', err.message);
   console.log('Conectado ao banco de dados SQLite.');
@@ -85,7 +26,7 @@ const db = new verboseSqlite.Database(DB_FILE, (err) => {
       cloud_link TEXT,
       script_path TEXT,
       external_links TEXT, -- Armazenado como JSON string
-      attachment_info TEXT,
+      transaction_hash TEXT,
 
       -- Requisitos de hardware e software --
       cpu BOOLEAN DEFAULT 0,
@@ -122,12 +63,6 @@ const db = new verboseSqlite.Database(DB_FILE, (err) => {
     // Passo 2: Verificar se a tabela está vazia e popular (Substitui o seed.ts)
     db.get('SELECT COUNT(*) as count FROM projects', (err, row) => {
       if (err) return console.error('Erro ao contar projetos:', err.message);
-      
-      if (row.count === 0) {
-        seedDatabase(db);
-      } else {
-        console.log('Banco de dados já contém dados. Povoamento ignorado.');
-      }
     });
   });
 });

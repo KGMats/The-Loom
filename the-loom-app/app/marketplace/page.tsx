@@ -5,7 +5,6 @@ import Link from 'next/link';
 import MainSection from '../components/MainSection';
 import '../styles/marketplace.css';
 import '../styles/home.css';
-import { ethers } from 'ethers';
 
 export default function MarketplacePage() {
   const [searchTerm, setSearchTerm] = useState('')
@@ -101,41 +100,45 @@ export default function MarketplacePage() {
 
   useEffect(() => {
     let mounted = true;
-    async function loadOnChainJobs() {
+    async function loadProjects() {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('/api/jobs/on-chain');
+        const res = await fetch('/api/projects');
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (!mounted) return;
 
-        if (data && data.success && Array.isArray(data.jobs)) {
-          const mapped = data.jobs.map((p: any, index: number) => ({
-            id: index,
-            title: `Job #${index}`,
-            description: p.dataUrl,
-            tags: 'On-chain',
-            price: `${ethers.formatEther(p.rewardEth)} ETH`,
-            posted: 'Posted recently',
-            wallet_address: p.requester,
-            wallet_address_secondary: p.provider,
+        if (data && data.success && Array.isArray(data.projects)) {
+          // Map backend project shape to UI-friendly shape
+          const mapped = data.projects.map((p: any) => ({
+            id: p.id,
+            title: p.title || 'Untitled project',
+            description: p.description || '',
+            tags: Array.isArray(p.external_links) ? p.external_links.join(' | ') : p.type || '',
+            price: typeof p.price === 'number' ? `$${p.price.toFixed(2)}` : (p.price || '$0.00'),
+            posted: p.created_at ? `Posted ${new Date(p.created_at).toLocaleString()}` : 'Posted recently',
+            wallet_address: p.wallet_address, // Include wallet_address for job creator check
+            wallet_address_secondary: p.wallet_address_secondary || '', // secondary address if any
             raw: p
           }));
 
           setJobs(mapped);
+        } else if (data && data.success && data.project) {
+          // single inserted project
+          setJobs([data.project]);
         } else {
           setJobs([]);
         }
       } catch (err: any) {
-        console.error('Failed to load on-chain jobs', err);
-        setError(err.message || 'Erro ao carregar jobs do smart contract');
+        console.error('Failed to load projects', err);
+        setError(err.message || 'Erro ao carregar projetos');
       } finally {
         if (mounted) setLoading(false);
       }
     }
 
-    loadOnChainJobs();
+    loadProjects();
     return () => { mounted = false };
   }, []);
 

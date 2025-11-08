@@ -8,7 +8,7 @@ import '../../styles/home.css';
 import { useAccount, useWalletClient } from 'wagmi';
 import { walletConnect } from 'wagmi/connectors';
 
-
+const backendAPI = "http://elon.local:3002"; // Adjust as needed
 
 export default function CreateAJobPage() {
   const router = useRouter();
@@ -175,7 +175,7 @@ export default function CreateAJobPage() {
         fd.append('script_path', budgetAssets.scriptUrl);
       }
 
-      const backResponse = await fetch('/api/jobs/prepare-post', {
+      const backResponse = await fetch(`${backendAPI}/api/jobs/prepare-post`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -1,4 +1,4 @@
-// @ts-check
+// @tws-check
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
@@ -8,29 +8,29 @@ const config: Config = {
   tagline: 'Decentralized GPU Compute Marketplace',
   favicon: 'img/favicon.ico',
   deploymentBranch: 'gh-pages',
-  
+
   // URL do seu site (GitHub Pages ou domínio customizado)
   url: 'https://a-r-ka.github.io',
   baseUrl: '/the-loom/', // Nome do repositório
-  
+
   // GitHub pages deployment
   organizationName: 'a-r-ka', // Seu GitHub username
   projectName: 'the-loom', // Nome do repo
-  
+
   onBrokenLinks: 'throw',
-  
+
   i18n: {
     defaultLocale: 'pt-BR',
     locales: ['pt-BR', 'en'],
   },
-  
+
   markdown: {
     mermaid: true, 
     hooks: {
       onBrokenMarkdownLinks: 'warn',
     },
   },
-  
+
   presets: [
     [
       'classic',
@@ -50,16 +50,9 @@ const config: Config = {
       } satisfies Preset.Options,
     ],
   ],
-  
+
   themeConfig: {
     image: 'img/the-loom-social-card.jpg',
-    
-    // Color mode configuration - force dark theme only
-    colorMode: {
-      defaultMode: 'dark',
-      disableSwitch: true, // This removes the light/dark toggle
-      respectPrefersColorScheme: false,
-    },
     
     navbar: {
       title: 'The Loom',
@@ -96,7 +89,6 @@ const config: Config = {
           position: 'right',
         },
       ],
-      style: 'dark', // Force dark navbar style
     },
     
     footer: {
@@ -108,6 +100,14 @@ const config: Config = {
             {
               label: 'Introduction',
               to: '/',
+            },
+            {
+              label: 'Quick Start',
+              to: '/getting-started/quick-start',
+            },
+            {
+              label: 'Architecture',
+              to: '/getting-started/architecture/overview',
             },
           ],
         },
