@@ -62,6 +62,7 @@ const sidebars: SidebarsConfig = {
       label: '🎯 For Judges',
       items: [
         'for-judges/problem-solution',
+        'for-judges/creative-process',
         'for-judges/tech-stack',
         'for-judges/future-roadmap',
       ],

@@ -1,4 +1,4 @@
-# Welcome to The Loom
+# Welcome to The Loom: The Airbnb for GPUs
 
 ![The Loom Banner](/img/banner.png)
 
@@ -6,104 +6,89 @@
 Try the live application at [the-loom.vercel.app](https://the-loom.vercel.app)
 :::
 
-## 🎯 What is The Loom?
+## 🎯 We are Weaving the World's Computing Power
 
-**The Loom** is a decentralized marketplace that connects people who need GPU computing power with those who have idle GPUs. Think of it as "Uber for GPU Computing".
+**The Loom** is a decentralized supercomputer, operating as a peer-to-peer marketplace. We connect users who need intensive computational power with a global network of providers who make their idle CPUs and GPUs available.
 
-### The Problem
+In short, we are the **"Airbnb for GPUs."**
 
-- 🏢 **Cloud GPU costs $1-5/hour** (AWS, Google Cloud)
-- 💻 **Gaming GPUs sit idle 80% of the time**
-- 🤖 **AI researchers need affordable compute**
-- 🎨 **3D artists need rendering power**
+### The Problem We Solve
 
-### Our Solution
+- 💰 **Exorbitant Costs:** Access to high-performance computing is controlled by a few tech giants, making it prohibitively expensive.
+-  idle **Massive Inefficiency:** Billions of dollars worth of powerful hardware sits idle in personal computers and private servers across the globe.
+- 🚧 **Innovation Bottleneck:** This inefficiency stifles innovation, concentrates power, and slows down the very progress that technologies like AI promise.
 
-```
-┌─────────────┐                    ┌──────────────┐
-│   Client    │  Posts Job + $$$   │ Smart Contract│
-│  (AI/3D)    │ ──────────────────▶│   (Escrow)    │
-└─────────────┘                    └──────────────┘
-                                           │
-                                           │ Releases Payment
-                                           ▼
-                                    ┌──────────────┐
-                                    │    Worker    │
-                                    │  (GPU Owner) │
-                                    └──────────────┘
-```
+### Our Solution: A Decentralized Marketplace
 
-### Key Features
+The Loom transforms any idle device into a node in a global computation network, creating a more accessible, efficient, and fair market for everyone.
 
-- ✅ **Trustless Escrow** via Smart Contracts
-- ✅ **Pay with Crypto** (USDC, ETH)
-- ✅ **Automated Payments** via Chainlink
-- ✅ **60-80% Cost Savings** vs. traditional cloud
+- ✅ **For Users:** Access the computational power you need at a **60-80% cost savings** compared to traditional cloud providers.
+- ✅ **For Providers:** Monetize your hardware when you're not using it.
+- ✅ **Trustless & Secure:** All transactions are managed by audited smart contracts on the blockchain, ensuring fairness and security.
 
 ---
 
-## 🏆 Hackathon Sponsors
+### High-Level Architecture
 
-This project was built for [Hackathon Name] using:
+Our ecosystem is composed of three main actors: the **Client** (who needs computation), the **Worker** (who provides it), and **The Loom Network**, which orchestrates the process.
+
+```mermaid
+graph TD
+    subgraph The Loom Network
+        A[Client]
+        B[The Loom Platform API/dApp]
+        C[Matchmaking Service]
+    end
+
+    subgraph Blockchain (Base L2)
+        D[Job Manager Smart Contract]
+    end
+
+    subgraph Worker Infrastructure
+        E[Worker Node]
+        F[Computation Environment]
+    end
+
+    A -- 1. Submit Job (Task, Budget) --> B
+    B -- 2. Find Available Worker --> C
+    C -- 3. Offer Job --> E
+    E -- 4. Accept Job & Lock Collateral --> D
+    A -- 5. Deposit Escrow Payment --> D
+    D -- 6. Notify Worker to Start --> E
+    E -- 7. Execute Task --> F
+    F -- 8. Return Results --> A
+    A -- 9. Confirm Completion --> D
+    D -- 10. Release Payment to E & Return Collateral --> E
+```
+
+---
+
+## 🏆 Built for the Future, on a Solid Foundation
+
+This project was built for the [Hackathon Name] hackathon, leveraging cutting-edge technologies to deliver a robust and scalable solution.
 
 <div style={{display: 'flex', gap: '2rem', alignItems: 'center', margin: '2rem 0'}}>
   <img src="/img/chainlink-logo.png" alt="Chainlink" height="60"/>
-  <img src="/img/scroll-logo.png" alt="Scroll" height="60"/>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/a/a7/BASE_logo.svg" alt="Base" height="60"/>
   <img src="/img/ethereum-logo.png" alt="Ethereum" height="60"/>
 </div>
 
 ### Integration Points
 
-| Sponsor | Usage |
-|---------|-------|
-| **Chainlink** | Price Feeds (USD→ETH) + Automation (auto-release) |
-| **Scroll** | Layer 2 for cheap transactions |
-| **Ethereum** | Base layer security |
+| Technology | Role in The Loom |
+|---|---|
+| **Base (L2)** | Provides a secure, low-cost, and scalable environment for our smart contracts, making job and payment transactions fast and affordable. |
+| **Chainlink** | We use Chainlink for Price Feeds (e.g., USD to ETH conversion for stable pricing) and potentially for future automation tasks. |
+| **Ethereum** | The foundational settlement layer, providing ultimate security and decentralization for our network. |
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Get Started
 
-Get started in 3 minutes:
+Ready to join the decentralized computing revolution?
 
-```bash
-# Clone the repository
-git clone https://github.com/your-username/the-loom
-cd the-loom
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
-
-Visit `http://localhost:3000` to see the app!
-
-👉 [Full Installation Guide →](/getting-started/installation)
-
----
-
-## 📚 Documentation Structure
-
-- **Getting Started**: Installation, configuration, first steps
-- **Architecture**: System design and data flow
-- **Smart Contracts**: Solidity code and deployment
-- **API Reference**: REST endpoints and usage
-- **Worker Node**: How to contribute GPU power
-
----
-
-## 🎥 Demo Video
-
-<iframe 
-  width="100%" 
-  height="400" 
-  src="https://www.youtube.com/embed/YOUR_VIDEO_ID" 
-  frameBorder="0" 
-  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-  allowFullScreen
-/>
+- **[Quick Start Guide →](/getting-started/quick-start)**: Get the platform running in 3 minutes.
+- **[Become a Worker →](/worker-node/setup)**: Learn how to connect your hardware and start earning.
 
 ---
 
@@ -113,17 +98,3 @@ Built by:
 - **[Seu Nome]** - Full Stack + Smart Contracts
 - **[Membro 2]** - Frontend + Design
 - **[Membro 3]** - Backend + Infrastructure
-
----
-
-## 📞 Contact
-
-- 📧 Email: team@theloom.io
-- 🐦 Twitter: [@TheLoomNetwork](https://twitter.com/theloom)
-- 💬 Discord: [Join our server](https://discord.gg/theloom)
-
----
-
-:::info Next Steps
-Ready to dive in? Start with the [Quick Start Guide →](/getting-started/quick-start)
-:::
