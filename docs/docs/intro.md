@@ -6,7 +6,7 @@
 Try the live application at [the-loom.vercel.app](https://the-loom.vercel.app)
 :::
 
-## 🎯 We are Weaving the World's Computing Power
+## We are Weaving the World's Computing Power
 
 **The Loom** is a decentralized supercomputer, operating as a peer-to-peer marketplace. We connect users who need intensive computational power with a global network of providers who make their idle CPUs and GPUs available.
 
@@ -14,17 +14,17 @@ In short, we are the **"Airbnb for GPUs."**
 
 ### The Problem We Solve
 
-- 💰 **Exorbitant Costs:** Access to high-performance computing is controlled by a few tech giants, making it prohibitively expensive.
+- **Exorbitant Costs:** Access to high-performance computing is controlled by a few tech giants, making it prohibitively expensive.
 -  idle **Massive Inefficiency:** Billions of dollars worth of powerful hardware sits idle in personal computers and private servers across the globe.
-- 🚧 **Innovation Bottleneck:** This inefficiency stifles innovation, concentrates power, and slows down the very progress that technologies like AI promise.
+- **Innovation Bottleneck:** This inefficiency stifles innovation, concentrates power, and slows down the very progress that technologies like AI promise.
 
 ### Our Solution: A Decentralized Marketplace
 
 The Loom transforms any idle device into a node in a global computation network, creating a more accessible, efficient, and fair market for everyone.
 
-- ✅ **For Users:** Access the computational power you need at a **60-80% cost savings** compared to traditional cloud providers.
-- ✅ **For Providers:** Monetize your hardware when you're not using it.
-- ✅ **Trustless & Secure:** All transactions are managed by audited smart contracts on the blockchain, ensuring fairness and security.
+- **For Users:** Access the computational power you need at a **60-80% cost savings** compared to traditional cloud providers.
+- **For Providers:** Monetize your hardware when you're not using it.
+- **Trustless & Secure:** All transactions are managed by audited smart contracts on the blockchain, ensuring fairness and security.
 
 ---
 
@@ -63,9 +63,9 @@ graph TD
 
 ---
 
-## 🏆 Built for the Future, on a Solid Foundation
+## Built for the Future, on a Solid Foundation
 
-This project was built for the [Hackathon Name] hackathon, leveraging cutting-edge technologies to deliver a robust and scalable solution.
+This project was built for the ETH Latam hackathon, leveraging cutting-edge technologies to deliver a robust and scalable solution.
 
 <div style={{display: 'flex', gap: '2rem', alignItems: 'center', margin: '2rem 0'}}>
   <img src="/img/chainlink-logo.png" alt="Chainlink" height="60"/>
@@ -83,18 +83,19 @@ This project was built for the [Hackathon Name] hackathon, leveraging cutting-ed
 
 ---
 
-## 🚀 Get Started
+## Get Started
 
 Ready to join the decentralized computing revolution?
 
-- **[Quick Start Guide →](/getting-started/quick-start)**: Get the platform running in 3 minutes.
 - **[Become a Worker →](/worker-node/setup)**: Learn how to connect your hardware and start earning.
 
 ---
 
-## 🤝 Team
+## Team
 
 Built by:
-- **[Seu Nome]** - Full Stack + Smart Contracts
-- **[Membro 2]** - Frontend + Design
-- **[Membro 3]** - Backend + Infrastructure
+- Allan Rocha Pereira - Web3 developer + Smart Contracts
+- Cairê Belo - Back + Infrastructure
+- Elon Pereira - Fullstack
+- Kayky Gibran - Frontend + Design
+- Guilherme Galvão - Business + Product 
