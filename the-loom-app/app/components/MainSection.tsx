@@ -2,13 +2,19 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
+
+const IMG = (img: string) => {
+  return `/${img}.png`;
+};
+
 import { CustomConnectButton } from "./ConnectButton";
 
 export default function MainSection() {
   return (
       <header className="header">
         <Link href="/" className="title-link">
-            <h1 className="logo">The Loom</h1>
+            <Image src={IMG('logo')} width={192} height={102} alt="Chainlink" />
         </Link>
         <nav className="nav-links">
           <Link href="/download" className="nav-link">
